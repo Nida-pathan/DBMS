@@ -1,17 +1,3 @@
-Write a Unnamed PL/SQL of code for the following requirements:-
-Schema:
- Borrower (Rollin, Name, DateofIssue, NameofBook, Status)
- Fine (Roll_no,Date,Amt)
-Accept roll_no & name of book from user.
-Check the number of days (from date of issue).
-1. If days are between 15 to 30 then fine amounts will be Rs 5
-per day.
-2. If no. of days>30, per day fine will be Rs 50 per day & for
-days less than 30, Rs. 5 per day.
-3. After submitting the book, status will change from I to R.
-4. If condition of fine is true, then details will be stored into
-fine table.
-
 
 CREATE TABLE Borrower (
   Rollin NUMBER,
@@ -98,78 +84,6 @@ EXCEPTION
     ROLLBACK;
 END;
 /
-
-
-
-CREATE TABLE Borrower (
-    Roll_no      NUMBER(5),
-    Name         VARCHAR2(50),
-    DateOfIssue  DATE,
-    NameOfBook   VARCHAR2(100),
-    Status       CHAR(1)      
-);
-
-CREATE TABLE Fine (
-    Roll_no NUMBER(5),
-    Date_   DATE,
-    Amt     NUMBER(10,2)
-);
-
-INSERT INTO Borrower VALUES (101, 'Ravi', TO_DATE('2024-10-10','YYYY-MM-DD'), 'DBMS Concepts', 'I');
-INSERT INTO Borrower VALUES (102, 'Maya', TO_DATE('2024-10-20','YYYY-MM-DD'), 'Java Basics', 'I');
-INSERT INTO Borrower VALUES (103, 'Gopal', TO_DATE('2024-09-25','YYYY-MM-DD'), 'Operating Systems', 'I');
-COMMIT;
-
-SET SERVEROUTPUT ON;
-
-DECLARE
-    v_rollno     Borrower.Roll_no%TYPE;
-    v_bookname   Borrower.NameOfBook%TYPE;
-    v_dateissue  Borrower.DateOfIssue%TYPE;
-    v_days       NUMBER;
-    v_fine       NUMBER := 0;
-BEGIN
-    v_rollno := &Roll_no;
-    v_bookname := '&Book_Name';
-
-    
-    SELECT DateOfIssue INTO v_dateissue
-    FROM Borrower
-    WHERE Roll_no = v_rollno
-      AND NameOfBook = v_bookname
-      AND Status = 'I';   -- Book currently issued
-
-   
-    v_days := TRUNC(SYSDATE - v_dateissue);
-
-    
-    IF v_days > 15 AND v_days <= 30 THEN
-        v_fine := (v_days - 15) * 5;  
-    ELSIF v_days > 30 THEN
-        v_fine := (15 * 5) + ((v_days - 30) * 50);
-    ELSE
-        v_fine := 0;
-    END IF;
-
-
-    UPDATE Borrower
-    SET Status = 'R'
-    WHERE Roll_no = v_rollno
-      AND NameOfBook = v_bookname;
-
-    
-    IF v_fine > 0 THEN
-        INSERT INTO Fine (Roll_no, Date_, Amt)
-        VALUES (v_rollno, SYSDATE, v_fine);
-    END IF;
-
-    DBMS_OUTPUT.PUT_LINE('Book return processed successfully.');
-    DBMS_OUTPUT.PUT_LINE('Total Days: ' || v_days);
-    DBMS_OUTPUT.PUT_LINE('Fine Amount: Rs. ' || v_fine);
-
-EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        DBMS_OUTPUT.PUT_LINE('No record found for the given Roll No and Book Name.');
 END;
 /
 
