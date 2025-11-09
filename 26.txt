@@ -1,0 +1,102 @@
+pip install mysql-connector-python
+
+
+CREATE DATABASE company_db;
+USE company_db;
+CREATE TABLE employee (
+    emp_id INT PRIMARY KEY,
+    name VARCHAR(50),
+    age INT,
+    designation VARCHAR(50),
+    salary FLOAT
+);
+
+
+import mysql.connector
+conn = mysql.connector.connect(
+    host="localhost",
+    user="root",        
+    password="your_password",  
+    database="company_db"
+)
+cursor = conn.cursor()
+
+def add_employee():
+    emp_id = int(input("Enter Employee ID: "))
+    name = input("Enter Employee Name: ")
+    age = int(input("Enter Age: "))
+    designation = input("Enter Designation: ")
+    salary = float(input("Enter Salary: "))
+
+    query = "INSERT INTO employee (emp_id, name, age, designation, salary) VALUES (%s, %s, %s, %s, %s)"
+    values = (emp_id, name, age, designation, salary)
+    cursor.execute(query, values)
+    conn.commit()
+    print(" Employee added successfully!\n")
+
+def view_employees():
+    cursor.execute("SELECT * FROM employee")
+    records = cursor.fetchall()
+    print("\n Employee Records:")
+    for row in records:
+        print(row)
+    print()
+
+def update_employee():
+    emp_id = int(input("Enter Employee ID to update: "))
+    new_salary = float(input("Enter new Salary: "))
+
+    query = "UPDATE employee SET salary = %s WHERE emp_id = %s"
+    cursor.execute(query, (new_salary, emp_id))
+    conn.commit()
+
+    if cursor.rowcount > 0:
+        print("Salary updated successfully!\n")
+    else:
+        print("Employee not found!\n")
+
+
+def delete_employee():
+    emp_id = int(input("Enter Employee ID to delete: "))
+
+    query = "DELETE FROM employee WHERE emp_id = %s"
+    cursor.execute(query, (emp_id,))
+    conn.commit()
+
+    if cursor.rowcount > 0:
+        print(" Employee deleted successfully!\n")
+    else:
+        print(" Employee not found!\n")
+
+
+def menu():
+    while True:
+        print("========== MySQL CRUD MENU ==========")
+        print("1. Add Employee")
+        print("2. View All Employees")
+        print("3. Update Employee Salary")
+        print("4. Delete Employee")
+        print("5. Exit")
+        choice = input("Enter your choice (1-5): ")
+
+        if choice == '1':
+            add_employee()
+        elif choice == '2':
+            view_employees()
+        elif choice == '3':
+            update_employee()
+        elif choice == '4':
+            delete_employee()
+        elif choice == '5':
+            print(" Exiting...")
+            break
+        else:
+            print(" Invalid choice. Try again!\n")
+
+
+if __name__ == "__main__":
+    menu()
+    cursor.close()
+    conn.close()
+
+
