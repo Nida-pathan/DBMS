@@ -1,0 +1,163 @@
+db.Employee.drop();
+
+db.Employee.insertMany([
+  {
+    Name: { FName: "Swapnil", LName: "Jadhav" },
+    Company_name: "TCS",
+    Salary: 55000,
+    Designation: "Developer",
+    Age: 29,
+    Expertise: ["MongoDB", "NodeJS"],
+    DOB: ISODate("1996-02-15"),
+    Email: "swapnil.jadhav@tcs.com",
+    Contact: "9000000001",
+    Address: [{ PAddr: "Kothrud", LAddr: "Pune", city: "Pune" }]
+  },
+  {
+    Name: { FName: "Rohan", LName: "Patil" },
+    Company_name: "Infosys",
+    Salary: 70000,
+    Designation: "DBA",
+    Age: 42,
+    Expertise: ["SQL", "MongoDB"],
+    DOB: ISODate("1983-04-10"),
+    Email: "rohan.patil@infosys.com",
+    Contact: "9876543210",
+    Address: [{ PAddr: "Baner", LAddr: "Pune", city: "Pune" }]
+  },
+  {
+    Name: { FName: "Priya", LName: "Sharma" },
+    Company_name: "TCS",
+    Salary: 60000,
+    Designation: "Tester",
+    Age: 31,
+    Expertise: ["Selenium", "Java"],
+    DOB: ISODate("1994-06-21"),
+    Email: "priya.sharma@tcs.com",
+    Contact: "9998887776",
+    Address: [{ PAddr: "Andheri", LAddr: "Mumbai", city: "Mumbai" }]
+  },
+  {
+    Name: { FName: "Neha", LName: "Deshmukh" },
+    Company_name: "Wipro",
+    Salary: 48000,
+    Designation: "DBA",
+    Age: 45,
+    Expertise: ["MongoDB", "MySQL"],
+    DOB: ISODate("1979-01-02"),
+    Email: "neha.deshmukh@wipro.com",
+    Contact: "7776665554",
+    Address: [{ PAddr: "Shivaji Nagar", LAddr: "Pune", city: "Pune" }]
+  },
+  {
+    Name: { FName: "Maya", LName: "Kadam" },
+    Company_name: "IBM",
+    Salary: 52000,
+    Designation: "Developer",
+    Age: 28,
+    Expertise: ["Cassandra", "Python"],
+    DOB: ISODate("1997-07-19"),
+    Email: "maya.kadam@ibm.com",
+    Contact: "9898989898",
+    Address: [{ PAddr: "Delhi Center", LAddr: "Delhi", city: "Delhi" }]
+  }
+]);
+
+var mapFunction1 = function() {
+  emit(this.Company_name, this.Salary);
+};
+var reduceFunction1 = function(key, values) {
+  return Array.sum(values);
+};
+
+db.Employee.mapReduce(
+  mapFunction1,
+  reduceFunction1,
+  { out: "TotalSalaryPerCompany" }
+);
+
+db.TotalSalaryPerCompany.find().pretty();
+
+db.Employee.mapReduce(
+  mapFunction1,
+  reduceFunction1,
+  {
+    query: { Company_name: "TCS" },
+    out: "TotalSalaryTCS"
+  }
+);
+
+db.TotalSalaryTCS.find().pretty();
+
+
+var mapFunction2 = function() {
+  this.Address.forEach(function(addr) {
+    if (addr.city === "Pune") {
+      emit("Pune", this.Salary);
+    }
+  }, this);
+};
+
+var reduceFunction2 = function(key, values) {
+  return { total: Array.sum(values), count: values.length };
+};
+
+var finalizeFunction2 = function(key, reducedVal) {
+  return reducedVal.total / reducedVal.count;
+};
+
+db.Employee.mapReduce(
+  mapFunction2,
+  reduceFunction2,
+  {
+    out: "AvgSalaryPune",
+    finalize: finalizeFunction2
+  }
+);
+
+db.AvgSalaryPune.find().pretty();
+
+
+var mapFunction3 = function() {
+  this.Address.forEach(function(addr) {
+    if (addr.city === "Pune") {
+      emit("Pune", 1);
+    }
+  }, this);
+};
+
+var reduceFunction3 = function(key, values) {
+  return Array.sum(values);
+};
+
+db.Employee.mapReduce(
+  mapFunction3,
+  reduceFunction3,
+  { out: "CountPune" }
+);
+
+db.CountPune.find().pretty();
+
+
+var mapFunction4 = function() {
+  this.Address.forEach(function(addr) {
+    if (addr.city === "Pune" && this.Age > 40) {
+      emit("Pune_40plus", 1);
+    }
+  }, this);
+};
+
+var reduceFunction4 = function(key, values) {
+  return Array.sum(values);
+};
+
+db.Employee.mapReduce(
+  mapFunction4,
+  reduceFunction4,
+  { out: "CountPuneAge40" }
+);
+
+db.CountPuneAge40.find().pretty();
+
+
+
