@@ -1,13 +1,3 @@
-Write a PL/SQL Block to increase the salary of employees by 10%
-of existing salary, who are having salary less than average
-salary of organization, whenever such salary updates takes place,
-a record for same is maintained in the increment_salary table.
-emp(emp_no, salary)
-increment_salary(emp_no, salary)
-
-
-
-
 
 CREATE TABLE emp (
   emp_no NUMBER PRIMARY KEY,
@@ -25,8 +15,6 @@ CREATE TABLE increment_salary (
 INSERT INTO emp VALUES (1, 'Alice', 40000);
 INSERT INTO emp VALUES (2, 'Bob', 60000);
 INSERT INTO emp VALUES (3, 'Charlie', 80000);
--- Average salary is (40000+60000+80000)/3 = 60000
--- Only Alice (40000) should get a raise.
 COMMIT;
 
 SET SERVEROUTPUT ON;
@@ -74,55 +62,3 @@ EXCEPTION
     ROLLBACK;
 END;
 /
-
-
-
-CREATE TABLE emp (
-  emp_no NUMBER PRIMARY KEY,
-  salary NUMBER(10,2)
-);
-
-CREATE TABLE increment_salary (
-  emp_no NUMBER,
-  salary NUMBER(10,2)
-);
-
-INSERT INTO emp VALUES (101, 25000);
-INSERT INTO emp VALUES (102, 40000);
-INSERT INTO emp VALUES (103, 35000);
-INSERT INTO emp VALUES (104, 60000);
-INSERT INTO emp VALUES (105, 28000);
-COMMIT;
-
-SET SERVEROUTPUT ON;
-DECLARE
-  v_avg_salary emp.salary%TYPE;
-BEGIN
-  SELECT AVG(salary) INTO v_avg_salary FROM emp;
-  DBMS_OUTPUT.PUT_LINE('Average Salary: ' || v_avg_salary);
-
- 
-  FOR rec IN (SELECT emp_no, salary FROM emp WHERE salary < v_avg_salary) LOOP
-    
-    UPDATE emp
-    SET salary = salary + (salary * 0.10)
-    WHERE emp_no = rec.emp_no;
-
-    INSERT INTO increment_salary (emp_no, salary)
-    VALUES (rec.emp_no, rec.salary + (rec.salary * 0.10));
-
-    DBMS_OUTPUT.PUT_LINE('Salary updated for Emp No: ' || rec.emp_no);
-  END LOOP;
-
-  COMMIT;
-  DBMS_OUTPUT.PUT_LINE('Salary increment process completed successfully.');
-
-EXCEPTION
-  WHEN NO_DATA_FOUND THEN
-    DBMS_OUTPUT.PUT_LINE('No employee data found.');
-  WHEN OTHERS THEN
-    DBMS_OUTPUT.PUT_LINE('Unexpected Error: ' || SQLERRM);
-END;
-/
-
-select * from increment_salary;
