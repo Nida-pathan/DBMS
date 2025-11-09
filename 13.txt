@@ -1,0 +1,158 @@
+use companyDB;
+db.Employee.drop(); 
+
+db.Employee.insertMany([
+  {
+    Emp_id: 1,
+    Name: { FName: "Swapnil", LName: "Jadhav" },
+    Company_name: "TCS",
+    Salary: 48000,
+    Designation: "Developer",
+    Age: 29,
+    Expertise: ["MongoDB","MySQL","Cassandra"],
+    DOB: ISODate("1996-03-12"),
+    Email: "swapnil.jadhav@tcs.com",
+    Contact: "9000000001",
+    Address: [{ PAddr: "Pune, Maharashtra", city: "Pune", Pin_code: "411001" }]
+  },
+  {
+    Emp_id: 2,
+    Name: { FName: "Rohan", LName: "Patil" },
+    Company_name: "Infosys",
+    Salary: 55000,
+    Designation: "DBA",
+    Age: 27,
+    Expertise: ["MongoDB","SQL","Backup"],
+    DOB: ISODate("1998-04-12"),
+    Email: "rohan.patil@infosys.com",
+    Contact: "9876543210",
+    Address: [{ PAddr: "Pune, Maharashtra", city: "Pune", Pin_code: "411001" }]
+  },
+  {
+    Emp_id: 3,
+    Name: { FName: "Priya", LName: "Deshmukh" },
+    Company_name: "TCS",
+    Salary: 35000,
+    Designation: "Tester",
+    Age: 25,
+    Expertise: ["Java","Selenium"],
+    DOB: ISODate("1999-02-10"),
+    Email: "priya.deshmukh@tcs.com",
+    Contact: "9998887776",
+    Address: [{ PAddr: "Mumbai, Maharashtra", city: "Mumbai", Pin_code: "400001" }]
+  },
+  {
+    Emp_id: 4,
+    Name: { FName: "Neha", LName: "Kadam" },
+    Company_name: "Wipro",
+    Salary: 70000,
+    Designation: "DBA",
+    Age: 29,
+    Expertise: ["DBA","MongoDB","Replication"],
+    DOB: ISODate("1996-07-20"),
+    Email: "neha.kadam@wipro.com",
+    Contact: "7776665554",
+    Address: [{ PAddr: "Pune, Maharashtra", city: "Pune", Pin_code: "411001" }]
+  },
+  {
+    Emp_id: 5,
+    Name: { FName: "Maya", LName: "Sharma" },
+    Company_name: "IBM",
+    Salary: 45000,
+    Designation: "DBA",
+    Age: 32,
+    Expertise: ["MongoDB","MySQL","Cassandra"],
+    DOB: ISODate("1993-04-19"),
+    Email: "maya.sharma@ibm.com",
+    Contact: "9898989898",
+    Address: [{ PAddr: "Delhi, India", city: "Delhi", Pin_code: "110001" }]
+  }
+]);
+
+db.Employee.aggregate([
+  { $unwind: "$Expertise" },
+  { $group: { _id: "$Expertise", totalSalary: { $sum: "$Salary" }, count: { $sum: 1 } } },
+  { $project: { Expertise: "$_id", totalSalary: 1, count: 1, _id: 0 } },
+  { $sort: { totalSalary: -1 } }
+]);
+
+db.Employee.aggregate([
+  { $group: {
+      _id: "$Company_name",
+      maxSalary: { $max: "$Salary" },
+      minSalary: { $min: "$Salary" },
+      avgSalary: { $avg: "$Salary" },         // optional extra
+      empCount: { $sum: 1 }
+    }
+  },
+  { $project: { Company: "$_id", maxSalary:1, minSalary:1, avgSalary:1, empCount:1, _id:0 } },
+  { $sort: { Company: 1 } }
+]);
+
+db.Employee.aggregate([
+  { $match: { Designation: "DBA" } },
+  { $unwind: "$Address" },
+  { $group: { _id: "$Address.city", totalSalary: { $sum: "$Salary" }, employees: { $addToSet: "$Emp_id" } } },
+  { $project: { city: "$_id", totalSalary:1, employeeCount: { $size: "$employees" }, _id:0 } }
+]);
+db.Employee.aggregate([
+  { $match: { Designation: "DBA" } },
+  { $unwind: "$Address" },
+  { $group: { _id: { emp: "$Emp_id", city: "$Address.city" }, salary: { $first: "$Salary" } } },
+  { $group: { _id: "$_id.city", totalSalary: { $sum: "$salary" }, countEmployees: { $sum: 1 } } },
+  { $project: { city: "$_id", totalSalary:1, countEmployees:1, _id:0 } }
+]);
+
+db.Employee.aggregate([
+  { $match: { "Name.FName": "Swapnil", "Name.LName": "Jadhav" } },
+  { $project: { Name: 1, Expertise: 1, _id: 0 } },
+  { $unwind: "$Expertise" },
+  { $project: { FullName: { $concat: ["$Name.FName"," ","$Name.LName"] }, Expertise: 1 } }
+]);
+
+db.Employee.createIndex(
+  { "Name.FName": 1, "Age": -1 },
+  { name: "idx_nameF_age_desc" }
+);
+db.Employee.createIndex(
+  { "Name.FName": 1, "Name.LName": 1, "Age": -1 },
+  { name: "idx_fname_lname_age" }
+);
+
+
+let bulk = db.Employee.initializeUnorderedBulkOp();
+for (let i = 2000; i < 12000; i++) {
+  bulk.insert({
+    Emp_id: i,
+    Name: { FName: "Auto" + i, LName: "User" + i },
+    Company_name: (i % 2 === 0) ? "TCS" : "Infosys",
+    Salary: Math.floor(Math.random()*80000)+10000,
+    Designation: (i % 7 === 0) ? "DBA" : "Developer",
+    Age: 22 + (i % 30),
+    Expertise: ["MongoDB","NodeJS"],
+    DOB: new Date(1990 + (i % 20), 0, 1),
+    Email: `auto${i}@example.com`,
+    Contact: "9000000000",
+    Address: [{ PAddr: "AutoAddr " + i, city: "Pune", Pin_code: "411001" }]
+  });
+}
+bulk.execute();
+
+
+db.Employee.getPlanCache().clear();
+
+let beforeExplain = db.Employee.find({ Emp_id: 1050 }).explain("executionStats");
+print("Before — stage:", beforeExplain.queryPlanner.winningPlan.stage || beforeExplain.queryPlanner.winningPlan);
+print("Before — executionTimeMillis:", beforeExplain.executionStats.executionTimeMillis);
+
+
+db.Employee.createIndex({ Emp_id: 1 }, { name: "idx_empid" });
+
+
+let afterExplain = db.Employee.find({ Emp_id: 1050 }).explain("executionStats");
+print("After — stage:", afterExplain.queryPlanner.winningPlan.stage || afterExplain.queryPlanner.winningPlan);
+print("After — executionTimeMillis:", afterExplain.executionStats.executionTimeMillis);
+
+db.Employee.getIndexes();
+
+
