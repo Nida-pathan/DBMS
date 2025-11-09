@@ -1,0 +1,103 @@
+pip install pymongo
+
+
+from pymongo import MongoClient
+from pprint import pprint
+
+client = MongoClient("mongodb://localhost:27017/")
+
+
+db = client["company_database"]
+
+
+collection = db["employee"]
+
+
+def add_employee():
+    emp_id = int(input("Enter Employee ID: "))
+    name = input("Enter Employee Name: ")
+    age = int(input("Enter Age: "))
+    designation = input("Enter Designation: ")
+    salary = float(input("Enter Salary: "))
+
+    employee = {
+        "emp_id": emp_id,
+        "name": name,
+        "age": age,
+        "designation": designation,
+        "salary": salary
+    }
+
+    collection.insert_one(employee)
+    print("Employee added successfully!\n")
+
+
+def show_all():
+    print("\n Employee Records:")
+    for emp in collection.find():
+        pprint(emp)
+    print()
+
+
+def update_employee():
+    emp_id = int(input("Enter Employee ID to update: "))
+    new_salary = float(input("Enter new Salary: "))
+    result = collection.update_one(
+        {"emp_id": emp_id},
+        {"$set": {"salary": new_salary}}
+    )
+    if result.matched_count > 0:
+        print("Salary updated successfully!\n")
+    else:
+        print("Employee not found!\n")
+
+
+def delete_employee():
+    emp_id = int(input("Enter Employee ID to delete: "))
+    result = collection.delete_one({"emp_id": emp_id})
+    if result.deleted_count > 0:
+        print("Employee deleted successfully!\n")
+    else:
+        print("Employee not found!\n")
+
+
+def navigate_records():
+    limit = int(input("Enter number of records to display per page: "))
+    skip = int(input("Enter how many records to skip (for next page): "))
+    print(f"\nShowing records {skip + 1} to {skip + limit}")
+    for emp in collection.find().skip(skip).limit(limit):
+        pprint(emp)
+    print()
+
+
+def menu():
+    while True:
+        print("========== MongoDB CRUD Menu ==========")
+        print("1. Add Employee")
+        print("2. View All Employees")
+        print("3. Update Employee Salary")
+        print("4. Delete Employee")
+        print("5. Navigate Records (Pagination)")
+        print("6. Exit")
+        choice = input("Enter your choice (1-6): ")
+
+        if choice == '1':
+            add_employee()
+        elif choice == '2':
+            show_all()
+        elif choice == '3':
+            update_employee()
+        elif choice == '4':
+            delete_employee()
+        elif choice == '5':
+            navigate_records()
+        elif choice == '6':
+            print(" Exiting...")
+            break
+        else:
+            print("Invalid choice. Please try again!\n")
+
+
+if __name__ == "__main__":
+    menu()
+    client.close()
