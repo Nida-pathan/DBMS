@@ -1,0 +1,172 @@
+
+db.Employee.drop();     
+     
+db.Employee.insertMany([
+  {
+    Emp_id: 101,
+    Name: { FName: "Rohan", LName: "Patil" },
+    Company_name: "Infosys",
+    Salary: 55000,
+    Designation: "DBA",
+    Age: 27,
+    Expertise: ["MongoDB", "SQL", "Backup"],
+    DOB: ISODate("1998-04-12"),
+    Email: "rohan.patil@infosys.com",
+    Contact: "9876543210",
+    Address: [
+      { PAddr: "Pune, Maharashtra", city: "Pune", Pin_code: "411001" },
+      { LAddr: "Bangalore, Karnataka", city: "Bangalore", Pin_code: "560001" }
+    ]
+  },
+  {
+    Emp_id: 102,
+    Name: { FName: "Priya", LName: "Deshmukh" },
+    Company_name: "TCS",
+    Salary: 35000,
+    Designation: "Tester",
+    Age: 25,
+    Expertise: ["Java", "Selenium"],
+    DOB: ISODate("1999-02-10"),
+    Email: "priya.deshmukh@tcs.com",
+    Contact: "9998887776",
+    Address: [
+      { PAddr: "Mumbai, Maharashtra", city: "Mumbai", Pin_code: "400001" }
+    ]
+  },
+  {
+    Emp_id: 103,
+    Name: { FName: "Amit", LName: "Joshi" },
+    Company_name: "TCS",
+    Salary: 46000,
+    Designation: "Developer",
+    Age: 30,
+    Expertise: ["Python", "Django", "MongoDB"],
+    DOB: ISODate("1994-08-15"),
+    Email: "amit.joshi@tcs.com",
+    Contact: "8887776665",
+    Address: [
+      { PAddr: "Nagpur, Maharashtra", city: "Nagpur", Pin_code: "440001" }
+    ]
+  },
+  {
+    Emp_id: 104,
+    Name: { FName: "Neha", LName: "Kadam" },
+    Company_name: "Wipro",
+    Salary: 70000,
+    Designation: "DBA",
+    Age: 29,
+    Expertise: ["DBA", "MongoDB", "Replication"],
+    DOB: ISODate("1996-07-20"),
+    Email: "neha.kadam@wipro.com",
+    Contact: "7776665554",
+    Address: [
+      { PAddr: "Pune, Maharashtra", city: "Pune", Pin_code: "411001" }
+    ]
+  },
+  {
+    Emp_id: 105,
+    Name: { FName: "Maya", LName: "Sharma" },
+    Company_name: "IBM",
+    Salary: 45000,
+    Designation: "DBA",
+    Age: 32,
+    Expertise: ["MongoDB", "MySQL", "Cassandra"],
+    DOB: ISODate("1993-04-19"),
+    Email: "maya.sharma@ibm.com",
+    Contact: "9898989898",
+    Address: [
+      { PAddr: "Delhi, India", city: "Delhi", Pin_code: "110001" }
+    ]
+  }
+]);
+
+db.Employee.aggregate([
+  { $group: { _id: "$Designation", totalSalary: { $sum: "$Salary" } } },
+  { $match: { totalSalary: { $gt: 200000 } } },
+  { $project: { Designation: "$_id", totalSalary: 1, _id: 0 } }
+]);
+
+db.Employee.aggregate([
+  {
+    $project: {
+      _idStr: { $toUpper: { $toString: "$_id" } },
+      FName: { $toUpper: "$Name.FName" },
+      LName: { $toUpper: "$Name.LName" }
+    }
+  },
+  {
+    $addFields: {
+      FullName: { $concat: ["$FName", " ", "$LName"] }
+    }
+  },
+  { $sort: { FullName: 1 } },
+  { $project: { _idStr: 1, FullName: 1, _id: 0 } }
+]);
+
+db.Employee.aggregate([
+  { $match: { Designation: "DBA" } },
+  { $unwind: "$Address" },                       // each address element becomes a row
+  { $group: { _id: "$Address.city", totalSalary: { $sum: "$Salary" } } },
+  { $project: { city: "$_id", totalSalary: 1, _id: 0 } }
+]);
+
+db.Employee.aggregate([
+  { $match: { Designation: "DBA" } },
+  { $unwind: "$Address" },
+  // split PAddr by comma and take first token (trim whitespace)
+  { $addFields: { cityFromP: { $trim: { input: { $arrayElemAt: [ { $split: ["$Address.PAddr", ","] }, 0 ] } } } } },
+  { $group: { _id: "$cityFromP", totalSalary: { $sum: "$Salary" } } },
+  { $project: { city: "$_id", totalSalary: 1, _id: 0 } }
+]);
+
+db.Employee.aggregate([
+  { $match: { Designation: "DBA" } },
+  { $unwind: "$Address" },
+  { $addFields: { city: "$Address.city" } },               // or derive from PAddr
+  { $group: { _id: { emp: "$Emp_id", city: "$city" }, salary: { $first: "$Salary" } } },
+  { $group: { _id: "$_id.city", totalSalary: { $sum: "$salary" } } },
+  { $project: { city: "$_id", totalSalary: 1, _id: 0 } }
+]);
+
+db.Employee.createIndex({ Designation: 1 }, { name: "idx_designation" });
+
+db.Employee.createIndex({ Expertise: 1 }, { name: "idx_expertise_multikey" });
+
+
+let bulk = db.Employee.initializeUnorderedBulkOp();
+for (let i = 2000; i < 12000; i++) {
+  bulk.insert({
+    Emp_id: i,
+    Name: { FName: "Auto" + i, LName: "User" + i },
+    Company_name: (i % 2 === 0) ? "TCS" : "Infosys",
+    Salary: Math.floor(Math.random() * 90000) + 10000,
+    Designation: (i % 5 === 0) ? "DBA" : "Developer",
+    Age: 22 + (i % 30),
+    Expertise: ["MongoDB", "NodeJS"],
+    DOB: new Date(1990 + (i % 20), 0, 1),
+    Email: `auto${i}@example.com`,
+    Contact: "9000000000",
+    Address: [{ PAddr: "AutoAddr " + i, city: "Pune", Pin_code: "411001" }]
+  });
+}
+bulk.execute();
+
+
+db.Employee.getPlanCache().clear();
+
+let before = db.Employee.find({ Emp_id: 1050 }).explain("executionStats");
+print("Before index — executionTimeMillis: " + before.executionStats.executionTimeMillis);
+printjson({ summary: before.executionStats});
+
+db.Employee.createIndex({ Emp_id: 1 }, { name: "idx_empid" });
+
+let after = db.Employee.find({ Emp_id: 1050 }).explain("executionStats");
+print("After index — executionTimeMillis: " + after.executionStats.executionTimeMillis);
+printjson({ summary: after.executionStats});
+
+db.Employee.getIndexes();     
+OR
+db.getCollection("Employee").getIndexes();
+
+
+
