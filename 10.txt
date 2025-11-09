@@ -1,0 +1,131 @@
+use companyDB;
+
+db.Employee.insertMany([
+  {
+    Name: { FName: "Rohan", LName: "Patil" },
+    Company_name: "Infosys",
+    Salary: 45000,
+    Designation: "Programmer",
+    Age: 28,
+    Expertise: ["MongoDB", "NodeJS", "React"],
+    DOB: ISODate("1997-02-12"),
+    Email: "rohan.patil@infosys.com",
+    Contact: "9876543210",
+    Address: [
+      { PAddr: "Pune, Maharashtra" },
+      { LAddr: "Bangalore, Karnataka" }
+    ]
+  },
+  {
+    Name: { FName: "Priya", LName: "Deshmukh" },
+    Company_name: "TCS",
+    Salary: 35000,
+    Designation: "Tester",
+    Age: 25,
+    Expertise: ["Java", "Selenium", "Manual Testing"],
+    DOB: ISODate("1999-05-10"),
+    Email: "priya.deshmukh@tcs.com",
+    Contact: "9998887776",
+    Address: [
+      { PAddr: "Mumbai, Maharashtra" },
+      { LAddr: "Thane, Maharashtra" }
+    ]
+  },
+  {
+    Name: { FName: "Amit", LName: "Joshi" },
+    Company_name: "TCS",
+    Salary: 60000,
+    Designation: "Developer",
+    Age: 30,
+    Expertise: ["Python", "Django", "MongoDB"],
+    DOB: ISODate("1995-08-15"),
+    Email: "amit.joshi@tcs.com",
+    Contact: "8887776665",
+    Address: [
+      { PAddr: "Nagpur, Maharashtra" },
+      { LAddr: "Mumbai, Maharashtra" }
+    ]
+  },
+  {
+    Name: { FName: "Neha", LName: "Kadam" },
+    Company_name: "Wipro",
+    Salary: 55000,
+    Designation: "Programmer",
+    Age: 27,
+    Expertise: ["C++", "JavaScript", "MongoDB"],
+    DOB: ISODate("1998-01-21"),
+    Email: "neha.kadam@wipro.com",
+    Contact: "7776665554",
+    Address: [
+      { PAddr: "Pune, Maharashtra" },
+      { LAddr: "Pune, Maharashtra" }
+    ]
+  },
+  {
+    Name: { FName: "Maya", LName: "Sharma" },
+    Company_name: "IBM",
+    Salary: 70000,
+    Designation: "Data Analyst",
+    Age: 29,
+    Expertise: ["MongoDB", "MySQL", "Cassandra"],
+    DOB: ISODate("1996-04-19"),
+    Email: "maya.sharma@ibm.com",
+    Contact: "9898989898",
+    Address: [
+      { PAddr: "Delhi, India" },
+      { LAddr: "Gurgaon, India" }
+    ]
+  }
+]);
+
+db.Employee.find().pretty();
+
+db.Employee.find(
+  { Designation: "Programmer", Salary: { $gt: 30000 } },
+  { Name: 1, Designation: 1, Salary: 1, Company_name: 1, _id: 0 }
+);
+
+db.Employee.updateOne(
+  { Designation: "Tester", Company_name: "TCS", Age: 25 },
+  {
+    $setOnInsert: {
+      Name: { FName: "Nikhil", LName: "Sawant" },
+      Salary: 32000,
+      Expertise: ["Java", "Jira"],
+      DOB: ISODate("1999-09-10"),
+      Email: "nikhil.sawant@tcs.com",
+      Contact: "9999999999",
+      Address: [{ PAddr: "Mumbai" }, { LAddr: "Mumbai" }]
+    }
+  },
+  { upsert: true }
+);
+
+db.Employee.updateMany(
+  { Company_name: "Infosys" },
+  { $inc: { Salary: 10000 } }
+);
+
+db.Employee.updateMany(
+  { Company_name: "TCS" },
+  { $inc: { Salary: -5000 } }
+);
+
+db.Employee.find(
+  { Designation: { $ne: "Tester" } },
+  { Name: 1, Designation: 1, Company_name: 1, Salary: 1, _id: 0 }
+);
+
+db.Employee.find(
+  { Expertise: ['MongoDB', 'MySQL', 'Cassandra'] },
+  { Name: 1, Company_name: 1, Expertise: 1, _id: 0 }
+);
+
+db.Employee.find().pretty();
+
+
+
+
+
+
+
