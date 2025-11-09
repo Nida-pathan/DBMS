@@ -1,13 +1,3 @@
-Trigger :Write a after trigger for Insert, update and delete
-event considering following requirement:
-Emp(Emp_no, Emp_name, Emp_salary)
-a) Trigger should be initiated when salary tried to be inserted
-is less than Rs.50,000/-
-b) Trigger should be initiated when salary tried to be updated
-for value less than Rs. 50,000/-
-Also the new values expected to be inserted will be stored in new
-table Tracking(Emp_no,Emp_salary).
-
 
 CREATE TABLE Emp (
   Emp_no NUMBER PRIMARY KEY,
