@@ -1,0 +1,120 @@
+create database s4;
+use s4;
+CREATE TABLE Cust_Master (
+    Cust_no VARCHAR(10) PRIMARY KEY,
+    Cust_name VARCHAR(50) NOT NULL,
+    Cust_addr VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Orders (
+    Order_no VARCHAR(10) PRIMARY KEY,
+    Cust_no VARCHAR(10),
+    Order_date DATE NOT NULL,
+    Qty_Ordered INT NOT NULL,
+    FOREIGN KEY (Cust_no) REFERENCES Cust_Master(Cust_no)
+);
+
+CREATE TABLE Product (
+    Product_no VARCHAR(10) PRIMARY KEY,
+    Product_name VARCHAR(50) NOT NULL,
+    Order_no VARCHAR(10),
+    FOREIGN KEY (Order_no) REFERENCES Orders(Order_no)
+);
+
+
+INSERT INTO Cust_Master VALUES
+('C1001', 'Anuj', 'Pune'),
+('C1002', 'Ravi', 'Banglore'),
+('C1003', 'Sara', 'Manglore'),
+('C1004', 'Manish', 'Delhi'),
+('C1005', 'Karan', 'Banglore'),
+('C1006', 'Pooja', 'Pune'),
+('C1007', 'Rahul', 'Manglore'),
+('C1008', 'Amit', 'Mumbai');
+
+INSERT INTO Orders VALUES
+('O101', 'C1001', '2024-02-10', 5),
+('O102', 'C1002', '2024-03-15', 2),
+('O103', 'C1003', '2024-03-20', 3),
+('O104', 'C1004', '2024-04-01', 6),
+('O105', 'C1005', '2024-04-15', 4),
+('O106', 'C1007', '2024-05-02', 7),
+('O107', 'C1008', '2024-06-01', 1);
+
+INSERT INTO Product VALUES
+('P201', 'Keyboard', 'O101'),
+('P202', 'Mouse', 'O102'),
+('P203', 'Monitor', 'O103'),
+('P204', 'Printer', 'O104'),
+('P205', 'Headphones', 'O105'),
+('P206', 'Speaker', 'O106'),
+('P207', 'Webcam', 'O107');
+
+
+SELECT Cust_name FROM Cust_Master
+WHERE Cust_name LIKE '_A%';
+
+SELECT * FROM Orders
+WHERE Cust_no IN ('C1002', 'C1005', 'C1007', 'C1008');
+
+
+SELECT * FROM Cust_Master
+WHERE Cust_addr IN ('Banglore', 'Manglore');
+
+
+SELECT c.Cust_name, p.Product_name
+FROM Cust_Master c
+JOIN Orders o ON c.Cust_no = o.Cust_no
+JOIN Product p ON o.Order_no = p.Order_no;
+
+
+CREATE VIEW View1 AS
+SELECT c.Cust_name, p.Product_name
+FROM Cust_Master c
+JOIN Orders o ON c.Cust_no = o.Cust_no
+JOIN Product p ON o.Order_no = p.Order_no;
+
+
+SELECT c.Cust_name, p.Product_name, o.Qty_Ordered
+FROM Cust_Master c
+JOIN Orders o ON c.Cust_no = o.Cust_no
+JOIN Product p ON o.Order_no = p.Order_no;
+
+
+SELECT c.Cust_name, o.Order_no, p.Product_name
+FROM Cust_Master c
+INNER JOIN Orders o ON c.Cust_no = o.Cust_no
+INNER JOIN Product p ON o.Order_no = p.Order_no;
+
+
+SELECT c.Cust_name, p.Product_name
+FROM Cust_Master c
+LEFT JOIN Orders o ON c.Cust_no = o.Cust_no
+LEFT JOIN Product p ON o.Order_no = p.Order_no;
+
+
+SELECT c.Cust_name, p.Product_name
+FROM Cust_Master c
+RIGHT JOIN Orders o ON c.Cust_no = o.Cust_no
+RIGHT JOIN Product p ON o.Order_no = p.Order_no;
+
+
+SELECT c.Cust_name, p.Product_name
+FROM Cust_Master c
+FULL JOIN Orders o ON c.Cust_no = o.Cust_no
+FULL JOIN Product p ON o.Order_no = p.Order_no;
+
+
+SELECT 
+    c.Cust_name, 
+    p.Product_name
+FROM Cust_Master c
+LEFT JOIN Orders o ON c.Cust_no = o.Cust_no
+LEFT JOIN Product p ON o.Order_no = p.Order_no
+UNION
+SELECT 
+    c.Cust_name, 
+    p.Product_name
+FROM Cust_Master c
+RIGHT JOIN Orders o ON c.Cust_no = o.Cust_no
+RIGHT JOIN Product p ON o.Order_no = p.Order_no;
