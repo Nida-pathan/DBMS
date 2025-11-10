@@ -1,0 +1,79 @@
+
+CREATE DATABASE s8;
+USE s8;
+
+
+CREATE TABLE Companies (
+    comp_id INT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    cost DECIMAL(10,2),
+    year INT
+);
+
+
+CREATE TABLE Orders (
+    comp_id INT,
+    domain VARCHAR(50),
+    quantity INT,
+    FOREIGN KEY (comp_id) REFERENCES Companies(comp_id)
+);
+
+
+INSERT INTO Companies VALUES
+(1, 'TechMinds', 12000, 2018),
+(2, 'InfoSoft', 18000, 2020),
+(3, 'CyberCore', 22000, 2021),
+(4, 'DataPlus', 15000, 2019);
+
+
+INSERT INTO Orders VALUES
+(1, 'AI', 5),
+(2, 'Cloud', 10),
+(3, 'CyberSecurity', 7);
+
+
+SELECT c.name, c.cost, o.domain, o.quantity
+FROM Companies c
+INNER JOIN Orders o ON c.comp_id = o.comp_id;
+
+
+SELECT c.name, c.cost, o.domain, o.quantity
+FROM Companies c
+LEFT JOIN Orders o ON c.comp_id = o.comp_id;
+
+
+SELECT c.name, c.cost, o.domain, o.quantity
+FROM Companies c
+RIGHT JOIN Orders o ON c.comp_id = o.comp_id;
+
+
+SELECT c.name, c.cost, o.domain, o.quantity
+FROM Companies c
+LEFT JOIN Orders o ON c.comp_id = o.comp_id
+UNION
+SELECT c.name, c.cost, o.domain, o.quantity
+FROM Companies c
+RIGHT JOIN Orders o ON c.comp_id = o.comp_id;
+
+
+CREATE VIEW View1 AS
+SELECT c.name AS Company_Name, o.quantity AS Quantity
+FROM Companies c
+JOIN Orders o ON c.comp_id = o.comp_id;
+
+
+CREATE VIEW View2 AS
+SELECT cost, year FROM Companies;
+
+
+INSERT INTO Companies VALUES (5, 'NextGen', 25000, 2022);
+
+
+UPDATE Companies SET cost = 26000 WHERE year = 2022;
+
+
+DELETE FROM Companies WHERE year = 2022;
+
+
+SELECT * FROM View1;
+SELECT * FROM View2;
